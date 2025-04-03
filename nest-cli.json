@@ -5,11 +5,6 @@
   "generateOptions": {
     "spec": false
   },
-  "paths": {
-    "modulesDir": "src/api/controllers",
-    "servicesDir": "src/application/services",
-    "controllersDir": "src/api/controllers"
-  },
   "compilerOptions": {
     "deleteOutDir": true
   }
