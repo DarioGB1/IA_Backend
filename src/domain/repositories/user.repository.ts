@@ -1,7 +1,7 @@
-import { UserEntity } from "../entities/user.entity";
-import { IBaseRepository } from "./base.repository";
+import { UserEntity } from '../entities/user.entity';
+import { IBaseRepository } from './base.repository';
 
-export const UserRepository = "UserRepository"
+export const UserRepository = 'UserRepository';
 export interface IUserRepository extends IBaseRepository<UserEntity> {
-    GetByEmail(email: string): Promise<UserEntity | null>,
+  getByEmail(email: string): Promise<UserEntity | null>;
 }

@@ -1,13 +1,13 @@
 export interface Page<T> {
-    total: number,
-    items: T[],
+  total: number;
+  items: T[];
 }
 
 export interface IBaseRepository<T> {
-    ExistsById(id: string): Promise<boolean>,
-    GetAll(): Promise<Page<T>>,
-    GetById(id: string): Promise<T | null>,
-    Create(item: Record<string, any>): Promise<T>,
-    Update(id: string, item: Partial<T>): Promise<T | null>,
-    Delete(id: string): Promise<void>
+  existsById(id: string): Promise<boolean>;
+  getAll(): Promise<Page<T>>;
+  getById(id: string): Promise<T | null>;
+  create(item: Record<string, any>): Promise<T>;
+  update(id: string, item: Partial<T>): Promise<T | null>;
+  delete(id: string): Promise<void>;
 }
