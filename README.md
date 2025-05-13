@@ -1,98 +1,335 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# IA-LEARN - Plataforma de Aprendizaje con Arquitectura de Microservicios
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Descripción
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+IA-LEARN es una plataforma educativa moderna implementada como un monorepo de microservicios utilizando NestJS y TypeScript. La arquitectura está diseñada siguiendo principios de Arquitectura Limpia y Domain-Driven Design (DDD), con un enfoque en la separación de responsabilidades, alta cohesión, bajo acoplamiento y escalabilidad. Esta plataforma permite gestionar todos los aspectos del proceso educativo, desde la autenticación segura de usuarios hasta la gestión de contenidos y seguimiento de progreso.
 
-## Description
+## Arquitectura del Sistema
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+El sistema está estructurado como un monorepo que contiene múltiples microservicios independientes, cada uno especializado en un dominio específico, siguiendo el patrón de "Bounded Context":
 
-## Project setup
+### Microservicios Principales
 
-```bash
-$ npm install
+1. **Gateway**: Punto de entrada único que expone una API REST para clientes externos y coordina la comunicación con los microservicios internos.
+   
+2. **Auth**: Gestiona la autenticación, registro y verificación de usuarios, manejo de tokens JWT y refresh tokens.
+   
+3. **Identity-Access**: Administra la información de identidad de los usuarios, implementando un patrón de repositorio para abstraer el acceso a datos.
+   
+4. **Mail**: Proporciona servicios de comunicación por correo electrónico mediante plantillas HTML responsivas.
+
+### Diagrama de Arquitectura Detallado
+
+```
+┌───────────────┐         ┌───────────────────────┐
+│               │         │                       │
+│    Cliente    │◄────────►  Gateway (API REST)   │
+│  (Web/Mobile) │         │                       │
+│               │         └───────────┬───────────┘
+└───────────────┘                     │
+                                      │
+                           ┌──────────▼─────────┐
+                           │                    │
+                           │   NATS Message     │◄────┐
+                           │      Broker        │     │
+                           │                    │     │
+                           └──┬─────────┬───────┘     │
+                              │         │             │
+            ┌─────────────────┘         │             │
+            │                           │             │
+┌───────────▼──────────┐   ┌────────────▼─────────┐   │
+│                      │   │                      │   │
+│  Auth Microservice   │   │   Identity-Access MS │   │
+│  (JWT, Verification) │   │  (User Management)   │   │
+│                      │   │                      │   │
+└──────────────────────┘   └──────────────────────┘   │
+                                                      │
+                   ┌────────────────────────────┐     │
+                   │                            │     │
+                   │  Mail Microservice         ├─────┘
+                   │  (Email Communication)     │
+                   │                            │
+                   └────────────────────────────┘
+                   
+┌──────────────────┐   ┌──────────────────┐   ┌───────────────────┐
+│                  │   │                  │   │                   │
+│  MongoDB         │   │  Redis           │   │  SMTP Server      │
+│  (Persistencia)  │   │  (Cache/Temp)    │   │  (Email Delivery) │
+│                  │   │                  │   │                   │
+└──────────────────┘   └──────────────────┘   └───────────────────┘
 ```
 
-## Compile and run the project
+### Comunicación entre Servicios
 
-```bash
-# development
-$ npm run start
+- **Gateway → Microservicios**: Comunicación RPC (Request/Response) a través de NATS
+- **Auth → Mail**: Comunicación Event-Driven (Publish/Subscribe) a través de NATS
+- **Auth → Identity-Access**: Comunicación RPC para validación de credenciales y creación de usuarios
+- **Todos los Microservicios**: Utilizan patrones de mensajes predefinidos (compartidos en la biblioteca libs/shared)
 
-# watch mode
-$ npm run start:dev
+## Estructura del Proyecto
 
-# production mode
-$ npm run start:prod
+```
+ia-learn/
+├── apps/                    # Microservicios (aplicaciones independientes)
+│   ├── auth/                # Servicio de autenticación
+│   │   ├── README.md        # Documentación específica del servicio
+│   │   └── src/             # Código fuente del servicio
+│   │       ├── main.ts      # Punto de entrada
+│   │       ├── aut.service.ts # Servicio principal
+│   │       ├── auth.controller.ts # Controlador
+│   │       ├── auth.module.ts # Configuración del módulo
+│   │       ├── config/      # Configuración (variables de entorno)
+│   │       ├── data/        # Acceso a datos (MongoDB, Redis)
+│   │       ├── services/    # Servicios auxiliares (tokens)
+│   │       └── utils/       # Utilidades (generación de códigos)
+│   │
+│   ├── gateway/             # API Gateway
+│   │   ├── README.md        # Documentación específica del gateway
+│   │   └── src/             # Código fuente del gateway
+│   │       ├── main.ts      # Punto de entrada (configura Swagger)
+│   │       ├── app.module.ts # Módulo principal
+│   │       ├── decorators/  # Decoradores personalizados
+│   │       ├── guards/      # Guards para protección de rutas
+│   │       └── modules/     # Módulos por dominio (auth, user)
+│   │
+│   ├── identity-access/     # Servicio de gestión de identidad
+│   │   ├── README.md        # Documentación específica del servicio
+│   │   └── src/             # Código fuente del servicio
+│   │       ├── main.ts      # Punto de entrada
+│   │       ├── identity-access.module.ts # Módulo principal
+│   │       └── user/        # Gestión de usuarios
+│   │           ├── interfaces/ # Contratos (repositorios)
+│   │           ├── repository/ # Implementaciones (MongoDB)
+│   │           └── ...      # Controladores, servicios, entidades
+│   │
+│   └── mail/                # Servicio de correo electrónico
+│       ├── README.md        # Documentación específica del servicio
+│       └── src/             # Código fuente del servicio
+│           ├── main.ts      # Punto de entrada
+│           ├── mail.module.ts # Módulo principal
+│           ├── mail.service.ts # Servicio de envío de correos
+│           ├── mail.controller.ts # Controlador
+│           ├── config/      # Configuración (SMTP)
+│           └── views/       # Plantillas de correo
+│
+├── libs/                    # Bibliotecas compartidas
+│   └── shared/              # Código compartido entre microservicios
+│       └── src/
+│           ├── const/       # Constantes compartidas
+│           ├── dtos/        # Objetos de transferencia de datos
+│           │   ├── internal/ # DTOs para comunicación interna
+│           │   ├── request/  # DTOs para solicitudes
+│           │   └── response/ # DTOs para respuestas
+│           ├── enums/       # Enumeraciones (tipos de correo, roles)
+│           ├── interfaces/  # Interfaces compartidas
+│           ├── patterns/    # Patrones de mensajes para NATS
+│           ├── services/    # Servicios compartidos (MongoDB, Redis)
+│           └── utils/       # Utilidades (GUID, mapeo)
+│
+├── docker-compose.yml       # Configuración de servicios en Docker
+├── nest-cli.json            # Configuración de NestJS
+├── package.json             # Dependencias y scripts
+├── tsconfig.json            # Configuración de TypeScript
+├── tsconfig.build.json      # Configuración de build de TypeScript
+└── README.md                # Documentación general del proyecto
 ```
 
-## Run tests
+## Implementación de Bibliotecas Compartidas
 
-```bash
-# unit tests
-$ npm run test
+El directorio `libs/shared` contiene código que se comparte entre todos los microservicios, siguiendo el principio DRY (Don't Repeat Yourself):
 
-# e2e tests
-$ npm run test:e2e
+### DTOs (Data Transfer Objects)
 
-# test coverage
-$ npm run test:cov
+Definen la estructura y validaciones para transferencia de datos:
+
+- **request**: DTOs para solicitudes entrantes (ej. `UserCreateDto`, `LoginDto`)
+- **response**: DTOs para respuestas (ej. `UserResponse`, `CredentialsResponse`)
+- **internal**: DTOs para comunicación entre microservicios
+
+### Patrones de Mensajes
+
+Definen constantes para los patrones de comunicación NATS:
+
+```typescript
+// auth.pattern.ts
+export enum AuthPattern {
+  LOGIN = 'auth.login',
+  CREATE_ACCOUNT = 'auth.create_account',
+  VERIFY_ACCOUNT = 'auth.verify_account',
+}
+
+// mail.pattern.ts
+export enum MailPattern {
+  SEND_MAIL = 'mail.send_mail',
+}
+
+// user.pattern.ts
+export enum UserPattern {
+  FIND_BY_ID = 'user.find_by_id',
+  UPDATE_ACCOUNT = 'user.update_account',
+  DELETE_ACCOUNT = 'user.delete_account',
+}
 ```
 
-## Deployment
+### Constantes y Enumeraciones
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+```typescript
+// Definición de tipos de correo
+export enum MailType {
+  Verification = 'VERIFICATION',
+  PasswordReset = 'PASSWORD_RESET',
+}
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g mau
-$ mau deploy
+// Definición de roles de usuario
+export enum UserRole {
+  STUDENT = 'STUDENT',
+  TEACHER = 'TEACHER',
+  ADMIN = 'ADMIN',
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Tecnologías y Patrones Utilizados
 
-## Resources
+### Framework y Lenguaje
 
-Check out a few resources that may come in handy when working with NestJS:
+- **NestJS**: Framework moderno de Node.js para aplicaciones escalables
+- **TypeScript**: Lenguaje tipado que mejora la calidad y mantenibilidad del código
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Comunicación entre Servicios
 
-## Support
+- **NATS**: Message broker para comunicación entre microservicios
+  - Patrones Request/Response para operaciones síncronas
+  - Patrones Pub/Sub para comunicación asíncrona
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Almacenamiento de Datos
 
-## Stay in touch
+- **MongoDB**: Base de datos NoSQL para almacenamiento persistente
+- **Redis**: Almacenamiento en memoria para datos temporales y estado de verificación
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### Seguridad
 
-## License
+- **JWT (JSON Web Tokens)**: Para autenticación y comunicación segura
+- **Cookies seguras HTTP-Only**: Para almacenamiento seguro de tokens en cliente
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+### Patrones de Diseño Implementados
+
+- **Microservicios**: Arquitectura descentralizada para escalabilidad horizontal
+- **Gateway Pattern**: Punto de entrada unificado para clientes externos
+- **Repository Pattern**: Abstracción del acceso a datos
+- **Dependency Injection**: Acoplamiento débil y facilidad de pruebas
+- **Factory Pattern**: Creación estandarizada de objetos complejos
+- **DTO Pattern**: Objetos específicos para transferencia de datos
+- **Mapper Pattern**: Conversión entre entidades y DTOs
+
+## Requisitos del Sistema
+
+- **Node.js**: v18.0.0 o superior
+- **npm**: v9.0.0 o superior
+- **Docker y Docker Compose**: Para entorno de desarrollo
+- **NATS Server**: Broker de mensajes
+- **MongoDB**: Base de datos de documentos
+- **Redis**: Almacenamiento en memoria
+
+## Configuración del Entorno
+
+### Variables de Entorno
+
+Cada microservicio requiere su propio archivo `.env` con configuraciones específicas:
+
+#### Gateway (.env)
+```properties
+PORT=3000
+JWT_SECRET=your_jwt_secret_key
+NATS_SERVER=nats://localhost:4222
+```
+
+#### Auth Service (.env)
+```properties
+JWT_SECRET=your_jwt_secret_key
+JWT_EXPIRATION_TIME_IN_MINUTES=60
+REFRESH_TOKEN_EXPIRATION_TIME_IN_DAYS=30
+MONGODB_URI=mongodb://localhost:27017
+DATABASE_NAME=authdb
+REDIS_URL=redis://localhost:6379
+NATS_SERVER=nats://localhost:4222
+```
+
+#### Identity-Access Service (.env)
+```properties
+MONGODB_URI=mongodb://localhost:27017
+DATABASE_NAME=identitydb
+NATS_SERVER=nats://localhost:4222
+```
+
+#### Mail Service (.env)
+```properties
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=user@example.com
+MAIL_PASSWORD=your_password
+NATS_SERVER=nats://localhost:4222
+```
+
+### Docker Compose
+
+Para iniciar todos los servicios necesarios en contenedores:
+
+```bash
+docker-compose up -d
+```
+
+## Ejecución del Proyecto
+
+### Instalación de Dependencias
+
+```bash
+npm install
+```
+
+### Compilación del Proyecto
+
+```bash
+npm run build
+```
+
+### Ejecución en Modo Desarrollo
+
+```bash
+# Iniciar todos los microservicios
+npm run start:dev
+
+# Iniciar un microservicio específico
+npm run start:dev gateway
+npm run start:dev auth
+npm run start:dev identity-access
+npm run start:dev mail
+```
+
+### Ejecución en Producción
+
+```bash
+npm run start:prod
+```
+
+## Documentación de API
+
+Al iniciar el Gateway, la documentación de API estará disponible en:
+
+- **Scalar API Reference**: http://localhost:3000/api/doc
+
+## Mejores Prácticas Implementadas
+
+1. **Arquitectura Limpia**: Separación clara de capas (controladores, servicios, repositorios)
+2. **DDD (Domain-Driven Design)**: Organización del código por dominios
+3. **SOLID**: Principios de diseño orientado a objetos
+   - Single Responsibility (Responsabilidad Única)
+   - Open/Closed (Abierto/Cerrado)
+   - Liskov Substitution (Sustitución de Liskov)
+   - Interface Segregation (Segregación de Interfaces)
+   - Dependency Inversion (Inversión de Dependencias)
+4. **CI/CD**: Integración y despliegue continuos con pipelines automatizados
+5. **Versionado Semántico**: Control de versiones siguiendo estándares
+6. **Documentación Detallada**: READMEs específicos por servicio y documentación API
+7. **Manejo de Errores Robusto**: Captura y tratamiento consistente de excepciones
+8. **Logging Estructurado**: Registro de actividades y errores
+

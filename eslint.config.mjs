@@ -27,9 +27,17 @@ export default tseslint.config(
   },
   {
     rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/require-await': 'warn',
+      '@typescript-eslint/strict-boolean-expressions': 'warn',
+      '@typescript-eslint/no-misused-promises': 'error',
+      'no-console': 'warn',
+      'no-debugger': 'error',
+      'eqeqeq': ['error', 'always'],
+      'no-duplicate-imports': 'error',
+      'prettier/prettier': ['off', { endOfLine: 'auto' }],
     },
   },
 );
