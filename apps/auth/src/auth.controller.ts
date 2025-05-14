@@ -13,7 +13,7 @@ export class AuthController {
     return await this.authService.login(userLogin);
   }
 
-  @MessagePattern(AuthPattern.CREATE_ACCOUNT)
+  @MessagePattern(AuthPattern.SINGUP)
   async createAccount(@Payload() createUserDto: UserCreateDto) {
     return await this.authService.createAccount(createUserDto);
   }
@@ -21,5 +21,10 @@ export class AuthController {
   @MessagePattern(AuthPattern.VERIFY_ACCOUNT)
   async verifyAccount(@Payload() userVerification: UserVerification) {
     return await this.authService.verifyAccount(userVerification);
+  }
+
+  @MessagePattern(AuthPattern.VALIDATE_TOKEN)
+  async validateToken(@Payload() token: string) {
+    return await this.authService.validateToken(token);
   }
 }

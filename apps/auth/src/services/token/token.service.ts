@@ -17,7 +17,7 @@ export class TokenService {
         };
     }
 
-    verifyToken(token: string) {
+    verifyToken(token: string):Promise<Record<string, unknown>> {
         return this.jwtService.verifyAsync(token);
     }
 }

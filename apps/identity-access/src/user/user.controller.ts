@@ -1,13 +1,13 @@
 import { Controller } from '@nestjs/common';
 import { UserService } from './user.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { AuthPattern, UserCreateDto, UserPattern, UserUpdate } from '@app/shared';
+import { UserCreateDto, UserPattern, UserUpdate } from '@app/shared';
 
 @Controller()
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
-  @MessagePattern(AuthPattern.LOGIN)
+  @MessagePattern(UserPattern.CREATE_ACCOUNT)
   create(@Payload() UserCreateDto: UserCreateDto) {
     return this.userService.create(UserCreateDto);
   }

@@ -8,11 +8,11 @@ import { Envs } from './config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-
+  app.setGlobalPrefix('api');
   app.use(cookieParser());
 
   const config = new DocumentBuilder()
-    .setTitle('IA LEARN')
+    .setTitle('IA LEARN :D')
     .setDescription('The IA LEARN API description')
     .setVersion('1.0')
     .build();

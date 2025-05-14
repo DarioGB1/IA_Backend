@@ -26,7 +26,7 @@ export class AuthGuard implements CanActivate {
         }
 
         try {
-            request.payload = await firstValueFrom(this.authMS.send<Record<string, unknown>>(AuthPattern.VALIDATE_TOKEN, { token }));
+            request.payload = await firstValueFrom(this.authMS.send<Record<string, unknown>>(AuthPattern.VALIDATE_TOKEN, token));
             return request.payload !== undefined && request.payload !== null && Object.keys(request.payload).length > 0;
         } catch (error: unknown) {
             if (error instanceof UnauthorizedException) {

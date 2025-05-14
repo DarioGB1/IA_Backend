@@ -1,7 +1,8 @@
-import { createKeyv } from "@keyv/redis";
-import { CacheModule } from "@nestjs/cache-manager";
-import { DynamicModule, Module } from "@nestjs/common";
-import { RedisService } from "./redis.service";
+// redis.module.ts
+import { CacheModule } from '@nestjs/cache-manager';
+import * as redisStore from 'cache-manager-ioredis';
+import { Module, DynamicModule } from '@nestjs/common';
+import { RedisService } from './redis.service';
 
 @Module({})
 export class RedisModule {
@@ -9,9 +10,10 @@ export class RedisModule {
         return {
             module: RedisModule,
             imports: [
-                CacheModule.register({
+                CacheModule.registerAsync({
                     useFactory: () => ({
-                        stores: [createKeyv(redisUrl)],
+                        store: redisStore,
+                        url: redisUrl,
                     }),
                 }),
             ],

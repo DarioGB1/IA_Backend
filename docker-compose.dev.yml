@@ -1,0 +1,53 @@
+services:
+  nats:
+    image: nats:alpine3.21
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+
+  db-redis:
+    image: redis:alpine3.21
+    ports:
+      - "6379:6379"
+      
+  auth:
+    build:
+      context: .
+      dockerfile: apps/auth/Dockerfile
+    env_file:
+      - ./apps/auth/.env
+    depends_on:
+      - nats
+      - db-redis
+
+  gateway:
+    build:
+      context: .
+      dockerfile: apps/gateway/Dockerfile
+    env_file:
+      - ./apps/gateway/.env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth
+      - identity-access
+      - mail
+
+  identity-access:
+    build:
+      context: .
+      dockerfile: apps/identity-access/Dockerfile
+    env_file:
+      - ./apps/identity-access/.env
+    depends_on:
+      - nats
+
+  mail:
+    build:
+      context: .
+      dockerfile: apps/mail/Dockerfile
+    env_file:
+      - ./apps/mail/.env
+    depends_on:
+      - nats

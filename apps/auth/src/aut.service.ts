@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IRefreshTokenRepository, REFRESH_TOKEN_REPOSITORY } from './interfaces/refresh-token.repository';
 import { UserCreateDto, Credentials, Guid, MailType, Tokens, UserLogin, UserResponse, UserVerification, SendCodeDto, MAIL_MS, IDENTITY_ACCESS_MS } from '@app/shared';
-import { AuthPattern, MailPattern } from '@app/shared/patterns';
+import { AuthPattern, MailPattern, UserPattern } from '@app/shared/patterns';
 import { TokenService } from './services/token/token.service';
 import { RedisService } from '../../../libs/shared/src/services/redis/redis.service';
 import { AccountVerificationData } from './data/redis/interfaces/account-verification-data.interface';
@@ -72,6 +72,8 @@ export class AuthService {
   }
 
   async verifyAccount(userVerification: UserVerification): Promise<Credentials> {
+    const data = await this.redisService.get(`account:tmp:${userVerification.processId}:meta`)
+    console.log(data);
     const verificationData = JSON.parse(await this.redisService.get(`account:tmp:${userVerification.processId}:meta`) ?? "") as AccountVerificationData | null;
 
     if (!verificationData) throw Error("Not found");
@@ -79,8 +81,8 @@ export class AuthService {
     if (userVerification.validationCode !== verificationData.code) throw Error("Invalid code");
 
     const userData = JSON.parse(await this.redisService.get(`account:tmp:${verificationData.processId}:data`) ?? "") as UserCreateDto;
-    
-    const user: UserResponse = await firstValueFrom(this.identityAccessMS.send(AuthPattern.CREATE_ACCOUNT, userData));
+
+    const user: UserResponse = await firstValueFrom(this.identityAccessMS.send(UserPattern.CREATE_ACCOUNT, userData));
 
     const refreshToken = await this.refreshTokenRepository.create({
       userId: user.id,
@@ -105,5 +107,9 @@ export class AuthService {
         expires: refreshToken.expiresAt
       },
     }
+  }
+
+  validateToken(token: string) {
+    return this.tokenService.verifyToken(token);
   }
 }

@@ -24,7 +24,7 @@ export class AuthService {
     }
 
     async singIn(userLogin: UserLogin): Promise<Credentials> {
-        const { user, ...tokens } = await firstValueFrom<Credentials>(this.userMS.send(AuthPattern.LOGIN, userLogin));
+        const { user, ...tokens } = await firstValueFrom<Credentials>(this.authMS.send(AuthPattern.LOGIN, userLogin));
         return {
             user,
             ...this.formatTokens(tokens)
@@ -32,11 +32,12 @@ export class AuthService {
     }
 
     async singUp(userCreateDto: UserCreateDto): Promise<Tokens> {
-        return this.formatTokens(await firstValueFrom(this.authMS.send(AuthPattern.CREATE_ACCOUNT, userCreateDto)));
+        return this.formatTokens(await firstValueFrom(this.authMS.send(AuthPattern.SINGUP, userCreateDto)));
     }
 
     async verifyAccount(userVerification: UserVerification): Promise<Credentials> {
-        const { user, ...tokens } = await firstValueFrom<Credentials>(this.userMS.send(AuthPattern.VERIFY_ACCOUNT, userVerification));
+        console.log(userVerification);
+        const { user, ...tokens } = await firstValueFrom<Credentials>(this.authMS.send(AuthPattern.VERIFY_ACCOUNT, userVerification));
         return {
             user,
             ...this.formatTokens(tokens)
