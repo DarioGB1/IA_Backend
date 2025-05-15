@@ -1,8 +1,8 @@
-import { MailType } from "@app/shared";
+import { MailType } from '@app/shared';
 
 export class MailViews {
-    private static BuildCreateAccountView(user: string, code: string) {
-        return `
+  private static BuildCreateAccountView(user: string, code: string) {
+    return `
         <!DOCTYPE html>
         <html>
         <head>
@@ -23,14 +23,14 @@ export class MailViews {
             </div>
         </body>
         </html>`;
-    }
+  }
 
-    static buildView(type: MailType, user: string, code: string) {
-        switch (type) {
-            case MailType.Verification:
-                return this.BuildCreateAccountView(user, code);
-            default:
-                throw new Error('Not Implemented.');
-        }
+  static buildView(type: MailType, user: string, code: string) {
+    switch (type) {
+      case MailType.Verification:
+        return this.BuildCreateAccountView(user, code);
+      default:
+        throw new Error('Not Implemented.');
     }
+  }
 }

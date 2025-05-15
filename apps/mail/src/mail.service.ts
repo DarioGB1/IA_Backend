@@ -34,8 +34,11 @@ export class MailService implements OnModuleInit {
     }
   }
 
-
-  async sendVerificationMail(options: MailOptions, code: string, name: string): Promise<void> {
+  async sendVerificationMail(
+    options: MailOptions,
+    code: string,
+    name: string,
+  ): Promise<void> {
     try {
       await this.transporter.sendMail({
         to: options.to,

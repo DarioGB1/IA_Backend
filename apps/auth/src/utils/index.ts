@@ -1,1 +1,1 @@
-export * from "./code-generate";
+export * from './code-generate';

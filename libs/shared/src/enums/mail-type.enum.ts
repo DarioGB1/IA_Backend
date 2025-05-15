@@ -1,4 +1,4 @@
 export enum MailType {
-    Verification = "Verification",
-    PasswordReset = "Password Reset"
+  Verification = 'Verification',
+  PasswordReset = 'Password Reset',
 }

@@ -1,4 +1,4 @@
 export interface IPaginationRepository<T> {
-    total: number;
-    items: T[];
+  total: number;
+  items: T[];
 }

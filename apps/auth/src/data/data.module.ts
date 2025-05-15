@@ -7,19 +7,19 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MongoRefreshTokenModule } from './mongo/refresh-token/refresh-token.module';
 
 @Module({
-    imports: [
-        MongooseModule.forRoot(Envs.DATABASE_URL, {
-            dbName: Envs.DATABASE_NAME
-        }),
-        RedisModule.register(Envs.REDIS_URL),
-        MongoRefreshTokenModule
-    ],
-    providers: [
-        {
-            provide: REFRESH_TOKEN_REPOSITORY,
-            useClass: MongoRefreshTokenRepository
-        }
-    ],
-    exports: [REFRESH_TOKEN_REPOSITORY, RedisModule]
+  imports: [
+    MongooseModule.forRoot(Envs.DATABASE_URL, {
+      dbName: Envs.DATABASE_NAME,
+    }),
+    RedisModule.register(Envs.REDIS_URL),
+    MongoRefreshTokenModule,
+  ],
+  providers: [
+    {
+      provide: REFRESH_TOKEN_REPOSITORY,
+      useClass: MongoRefreshTokenRepository,
+    },
+  ],
+  exports: [REFRESH_TOKEN_REPOSITORY, RedisModule],
 })
-export class DataModule { }
+export class DataModule {}

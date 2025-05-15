@@ -1,35 +1,59 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IRefreshTokenRepository, REFRESH_TOKEN_REPOSITORY } from './interfaces/refresh-token.repository';
-import { UserCreateDto, Credentials, Guid, MailType, Tokens, UserLogin, UserResponse, UserVerification, SendCodeDto, MAIL_MS, IDENTITY_ACCESS_MS } from '@app/shared';
-import { AuthPattern, MailPattern, UserPattern } from '@app/shared/patterns';
+import {
+  IRefreshTokenRepository,
+  REFRESH_TOKEN_REPOSITORY,
+} from './interfaces/refresh-token.repository';
+import {
+  UserCreateDto,
+  Credentials,
+  Guid,
+  MailType,
+  Tokens,
+  UserLogin,
+  UserResponse,
+  UserVerification,
+  SendCodeDto,
+  MAIL_MS,
+  IDENTITY_ACCESS_MS,
+  ValidatePassword,
+  ApiException,
+} from '@app/shared';
+import { MailPattern, UserPattern } from '@app/shared/patterns';
 import { TokenService } from './services/token/token.service';
 import { RedisService } from '../../../libs/shared/src/services/redis/redis.service';
 import { AccountVerificationData } from './data/redis/interfaces/account-verification-data.interface';
 import { Envs } from './config/envs';
-import { ClientProxy } from '@nestjs/microservices';
+import { ClientProxy, RpcException } from '@nestjs/microservices';
 import { CodeGenerate } from './utils';
 import { firstValueFrom } from 'rxjs';
-
-
 
 @Injectable()
 export class AuthService {
   constructor(
-    @Inject(REFRESH_TOKEN_REPOSITORY) private readonly refreshTokenRepository: IRefreshTokenRepository,
+    @Inject(REFRESH_TOKEN_REPOSITORY)
+    private readonly refreshTokenRepository: IRefreshTokenRepository,
     @Inject(MAIL_MS) private readonly mailMS: ClientProxy,
     @Inject(IDENTITY_ACCESS_MS) private readonly identityAccessMS: ClientProxy,
     private readonly redisService: RedisService,
     private readonly tokenService: TokenService,
-  ) { }
+  ) {}
 
   async login(login: UserLogin): Promise<Credentials> {
-    const user: UserResponse = await firstValueFrom(this.identityAccessMS.send(AuthPattern.LOGIN, { email: login.email, password: login.password }));
+    const user = await firstValueFrom(
+      this.identityAccessMS.send<UserResponse, ValidatePassword>(
+        UserPattern.VALIDATE_PASSWORD,
+        { email: login.email, password: login.password },
+      ),
+    );
 
     const refreshToken = await this.refreshTokenRepository.create({
       userId: user.id,
       deviceId: login.deviceId,
       ipAddress: login.ipAddress,
-      expiresAt: new Date(Date.now() + Envs.REFRESH_TOKEN_EXPIRATION_TIME_IN_DAYS * 24 * 60 * 60 * 1000)
+      expiresAt: new Date(
+        Date.now() +
+          Envs.REFRESH_TOKEN_EXPIRATION_TIME_IN_DAYS * 24 * 60 * 60 * 1000,
+      ),
     });
 
     return {
@@ -37,9 +61,9 @@ export class AuthService {
       accessToken: await this.tokenService.generate({ id: user.id }),
       refreshToken: {
         value: refreshToken.id,
-        expires: refreshToken.expiresAt
+        expires: refreshToken.expiresAt,
       },
-    }
+    };
   }
 
   async createAccount(userCreateDto: UserCreateDto): Promise<Tokens> {
@@ -58,55 +82,86 @@ export class AuthService {
       code,
       processId,
       isVerifiedCode: false,
-    }
+    };
 
     await Promise.all([
-      this.redisService.set(`account:tmp:${processId}:data`, JSON.stringify(userCreateDto), 10),
-      this.redisService.set(`account:tmp:${processId}:meta`, JSON.stringify(verificationData), 10),
+      this.redisService.set(
+        `account:tmp:${processId}:data`,
+        JSON.stringify(userCreateDto),
+        10,
+      ),
+      this.redisService.set(
+        `account:tmp:${processId}:meta`,
+        JSON.stringify(verificationData),
+        10,
+      ),
     ]);
 
     return {
       accessToken: await this.tokenService.generate({ processId }, 10),
-      refreshToken: null
-    }
+      refreshToken: null,
+    };
   }
 
-  async verifyAccount(userVerification: UserVerification): Promise<Credentials> {
-    const data = await this.redisService.get(`account:tmp:${userVerification.processId}:meta`)
-    console.log(data);
-    const verificationData = JSON.parse(await this.redisService.get(`account:tmp:${userVerification.processId}:meta`) ?? "") as AccountVerificationData | null;
+  async verifyAccount(
+    userVerification: UserVerification,
+  ): Promise<Credentials> {
+    const verificationData = JSON.parse(
+      (await this.redisService.get(
+        `account:tmp:${userVerification.processId}:meta`,
+      )) ?? '',
+    ) as AccountVerificationData | null;
 
-    if (!verificationData) throw Error("Not found");
-    if (verificationData.isVerifiedCode) throw Error("Code used");
-    if (userVerification.validationCode !== verificationData.code) throw Error("Invalid code");
+    if (!verificationData) throw new RpcException('Process not found');
+    if (verificationData.isVerifiedCode)
+      throw new RpcException(ApiException.forbidden('Code already used'));
+    if (userVerification.validationCode !== verificationData.code)
+      throw new RpcException(ApiException.unauthorized('Invalid code'));
 
-    const userData = JSON.parse(await this.redisService.get(`account:tmp:${verificationData.processId}:data`) ?? "") as UserCreateDto;
+    const userData = JSON.parse(
+      (await this.redisService.get(
+        `account:tmp:${verificationData.processId}:data`,
+      )) ?? '',
+    ) as UserCreateDto | null;
 
-    const user: UserResponse = await firstValueFrom(this.identityAccessMS.send(UserPattern.CREATE_ACCOUNT, userData));
+    if (!userData) throw new RpcException('User information not found');
+
+    const user: UserResponse = await firstValueFrom(
+      this.identityAccessMS.send(UserPattern.CREATE_ACCOUNT, userData),
+    );
 
     const refreshToken = await this.refreshTokenRepository.create({
       userId: user.id,
       deviceId: userVerification.deviceId,
       ipAddress: userVerification.ipAddress,
-      expiresAt: new Date(Date.now() + Envs.REFRESH_TOKEN_EXPIRATION_TIME_IN_DAYS * 24 * 60 * 60 * 1000)
+      expiresAt: new Date(
+        Date.now() +
+          Envs.REFRESH_TOKEN_EXPIRATION_TIME_IN_DAYS * 24 * 60 * 60 * 1000,
+      ),
     });
 
     await Promise.all([
-      this.redisService.delete(`account:tmp:${userVerification.processId}:meta`),
-      this.redisService.delete(`account:tmp:${userVerification.processId}:data`),
+      this.redisService.delete(
+        `account:tmp:${userVerification.processId}:meta`,
+      ),
+      this.redisService.delete(
+        `account:tmp:${userVerification.processId}:data`,
+      ),
     ]);
 
-
-    await this.redisService.set(`account:${user.id}:data`, JSON.stringify({ id: user.id }));
+    await this.redisService.set(
+      `account:${user.id}:data`,
+      JSON.stringify({ id: user.id }),
+    );
 
     return {
       user,
       accessToken: await this.tokenService.generate({ id: user.id }),
       refreshToken: {
         value: refreshToken.id,
-        expires: refreshToken.expiresAt
+        expires: refreshToken.expiresAt,
       },
-    }
+    };
   }
 
   validateToken(token: string) {

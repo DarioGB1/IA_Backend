@@ -9,7 +9,15 @@ import { Envs } from './config';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+
   app.use(cookieParser());
+
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://localhost:3001'],
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+    allowedHeaders: 'Content-Type, Authorization, X-Device-Id',
+  });
 
   const config = new DocumentBuilder()
     .setTitle('IA LEARN :D')
@@ -21,19 +29,23 @@ async function bootstrap() {
     deepScanRoutes: true,
   });
 
-  app.use('/api/doc', apiReference({
-    spec: {
-      content: documentFactory
-    }
-  }))
+  app.use(
+    '/api/doc',
+    apiReference({
+      spec: {
+        content: documentFactory,
+      },
+    }),
+  );
 
-  app.useGlobalPipes(new ValidationPipe({
-    // transform: true,
-    whitelist: true,
-    validateCustomDecorators: true,
-    // forbidNonWhitelisted: true,
-  }),
-  )
+  app.useGlobalPipes(
+    new ValidationPipe({
+      // transform: true,
+      whitelist: true,
+      validateCustomDecorators: true,
+      // forbidNonWhitelisted: true,
+    }),
+  );
   await app.listen(Envs.PORT ?? 3000);
 }
 bootstrap();

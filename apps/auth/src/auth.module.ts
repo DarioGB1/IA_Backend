@@ -16,14 +16,14 @@ import { Envs } from './config';
         transport: Transport.NATS,
         options: {
           servers: Envs.NATS_SERVER,
-        }
+        },
       },
       {
         name: IDENTITY_ACCESS_MS,
         transport: Transport.NATS,
         options: {
           servers: Envs.NATS_SERVER,
-        }
+        },
       },
     ]),
     TokenModule,
@@ -31,4 +31,4 @@ import { Envs } from './config';
   controllers: [AuthController],
   providers: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

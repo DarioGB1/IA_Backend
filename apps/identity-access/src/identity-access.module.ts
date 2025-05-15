@@ -6,4 +6,4 @@ import { UserModule } from './user/user.module';
   controllers: [],
   providers: [],
 })
-export class IdentityAccessModule { }
+export class IdentityAccessModule {}

@@ -1,6 +1,6 @@
 export interface UserLogin {
-    email: string,
-    password: string,
-    ipAddress: string,
-    deviceId: string
+  email: string;
+  password: string;
+  ipAddress: string;
+  deviceId: string;
 }

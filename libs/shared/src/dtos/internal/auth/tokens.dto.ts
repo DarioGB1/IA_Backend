@@ -1,6 +1,6 @@
-import { Token } from "./token.dto";
+import { Token } from './token.dto';
 
 export interface Tokens {
-    accessToken: Token;
-    refreshToken: Token | null
+  accessToken: Token;
+  refreshToken: Token | null;
 }

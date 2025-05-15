@@ -6,7 +6,7 @@ import { AuthPattern } from '@app/shared/patterns';
 
 @Controller()
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @MessagePattern(AuthPattern.LOGIN)
   async login(@Payload() userLogin: UserLogin) {

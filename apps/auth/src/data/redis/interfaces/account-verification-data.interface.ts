@@ -1,5 +1,5 @@
 export interface AccountVerificationData {
-    code: string,
-    processId: string,
-    isVerifiedCode: boolean,
+  code: string;
+  processId: string;
+  isVerifiedCode: boolean;
 }

@@ -5,7 +5,7 @@ import { MailPattern, SendCodeDto } from '@app/shared';
 
 @Controller()
 export class MailController {
-  constructor(private readonly mailService: MailService) { }
+  constructor(private readonly mailService: MailService) {}
 
   @EventPattern(MailPattern.SEND_MAIL)
   sendMail(@Payload() sendCodeDto: SendCodeDto) {
@@ -13,10 +13,10 @@ export class MailController {
       {
         mailType: sendCodeDto.mailType,
         to: sendCodeDto.email,
-        subject: "Test"
+        subject: 'Test',
       },
       sendCodeDto.code,
-      sendCodeDto.name
+      sendCodeDto.name,
     );
   }
 }

@@ -1,9 +1,9 @@
-import { IsDate, IsString } from "class-validator";
+import { IsDate, IsString } from 'class-validator';
 
 export class Token {
-    @IsString()
-    value: string;
+  @IsString()
+  value: string;
 
-    @IsDate()
-    expires: Date;
+  @IsDate()
+  expires: Date;
 }

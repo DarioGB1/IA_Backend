@@ -1,3 +1,3 @@
 export interface IDeleteRepository {
-    deleteById(id: string): Promise<boolean>;
+  deleteById(id: string): Promise<boolean>;
 }

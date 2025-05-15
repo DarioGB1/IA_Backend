@@ -1,6 +1,6 @@
-import { UserRole } from "@app/shared";
+import { UserRole } from '@app/shared';
 
 export interface UserData {
-    id: string,
-    role: UserRole,
+  id: string;
+  role: UserRole;
 }

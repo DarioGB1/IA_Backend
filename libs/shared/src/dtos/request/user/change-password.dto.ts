@@ -13,7 +13,7 @@ export class ChangePasswordDto {
   constructor(
     oldPassword: string,
     newPassword: string,
-    confirmNewPassword: string
+    confirmNewPassword: string,
   ) {
     this.oldPassword = oldPassword;
     this.newPassword = newPassword;

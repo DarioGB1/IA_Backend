@@ -1,3 +1,3 @@
 export const MailPattern = {
-    SEND_MAIL: "mail.send",
-}
+  SEND_MAIL: 'mail.send',
+};
