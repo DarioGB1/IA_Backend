@@ -1,10 +1,14 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   IUserRepository,
   USER_REPOSITORY,
 } from './interfaces/user.repository.interface';
 import {
-  ApiException,
   Mapper,
   UserCreateDto,
   UserResponse,
@@ -12,7 +16,6 @@ import {
   ValidatePassword,
 } from '@app/shared';
 import { Hash } from '../utils/hash';
-import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class UserService {
@@ -21,7 +24,6 @@ export class UserService {
   ) {}
 
   async create(userCreateDto: UserCreateDto): Promise<UserResponse> {
-    console.log(userCreateDto);
     userCreateDto.password = await Hash.generate(userCreateDto.password);
     const user = await this.userRepository.create(userCreateDto);
     return Mapper.map(user, UserResponse);
@@ -32,14 +34,14 @@ export class UserService {
     userUpdateDto: UserUpdateDto,
   ): Promise<UserResponse> {
     if (!(await this.userRepository.existsById(id)))
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     const user = await this.userRepository.update(id, userUpdateDto);
     return Mapper.map(user, UserResponse);
   }
 
   async delete(id: string): Promise<boolean> {
     if (!(await this.userRepository.existsById(id)))
-      throw new Error('User not found');
+      throw new NotFoundException('User not found');
     await this.userRepository.update(id, { active: false } as UserUpdateDto);
     return true;
   }
@@ -53,9 +55,13 @@ export class UserService {
     validatePassword: ValidatePassword,
   ): Promise<UserResponse> {
     const user = await this.userRepository.getByEmail(validatePassword.email);
-    if (!user) throw new RpcException(ApiException.notFound());
-    if (!(await Hash.compare(validatePassword.password, user.password)))
-      throw new RpcException(ApiException.forbidden('Invalid password'));
+
+    if (
+      !user ||
+      !(await Hash.compare(validatePassword.password, user.password))
+    )
+      throw new UnauthorizedException();
+
     return Mapper.map(user, UserResponse);
   }
 }

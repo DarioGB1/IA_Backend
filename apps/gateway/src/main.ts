@@ -5,6 +5,8 @@ import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { Envs } from './config';
+import { RpcExceptionFilter } from './common';
+import { ExceptionInterceptor } from '@app/shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,10 +15,10 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:3001'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    origin: Envs.ORIGINS,
+    methods: Envs.METHODS,
     credentials: true,
-    allowedHeaders: 'Content-Type, Authorization, X-Device-Id',
+    allowedHeaders: Envs.ALLOWED_HEADERS,
   });
 
   const config = new DocumentBuilder()
@@ -46,6 +48,11 @@ async function bootstrap() {
       // forbidNonWhitelisted: true,
     }),
   );
+
+  app.useGlobalInterceptors(new ExceptionInterceptor());
+
+  app.useGlobalFilters(new RpcExceptionFilter());
+
   await app.listen(Envs.PORT ?? 3000);
 }
 bootstrap();

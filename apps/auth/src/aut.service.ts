@@ -1,4 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import {
   IRefreshTokenRepository,
   REFRESH_TOKEN_REPOSITORY,
@@ -16,7 +21,6 @@ import {
   MAIL_MS,
   IDENTITY_ACCESS_MS,
   ValidatePassword,
-  ApiException,
 } from '@app/shared';
 import { MailPattern, UserPattern } from '@app/shared/patterns';
 import { TokenService } from './services/token/token.service';
@@ -114,9 +118,9 @@ export class AuthService {
 
     if (!verificationData) throw new RpcException('Process not found');
     if (verificationData.isVerifiedCode)
-      throw new RpcException(ApiException.forbidden('Code already used'));
+      throw new ForbiddenException('Code already used');
     if (userVerification.validationCode !== verificationData.code)
-      throw new RpcException(ApiException.unauthorized('Invalid code'));
+      throw new UnauthorizedException();
 
     const userData = JSON.parse(
       (await this.redisService.get(

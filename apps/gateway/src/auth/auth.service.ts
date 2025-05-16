@@ -32,8 +32,9 @@ export class AuthService {
 
   async singIn(userLogin: UserLogin): Promise<Credentials> {
     const { user, ...tokens } = await firstValueFrom<Credentials>(
-      this.authMS.send(AuthPattern.LOGIN, userLogin),
+      this.authMS.send<Credentials>(AuthPattern.LOGIN, userLogin),
     );
+
     return {
       user,
       ...this.formatTokens(tokens),

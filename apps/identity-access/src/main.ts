@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { IdentityAccessModule } from './identity-access.module';
-import { IDENTITY_ACCESS_MS } from '@app/shared';
+import { ExceptionInterceptor, IDENTITY_ACCESS_MS } from '@app/shared';
 import { Envs } from './config';
 
 async function bootstrap() {
@@ -15,6 +15,9 @@ async function bootstrap() {
       },
     },
   );
+
+  app.useGlobalInterceptors(new ExceptionInterceptor());
+
   await app.listen();
 }
 bootstrap();
